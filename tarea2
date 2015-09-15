@@ -1,0 +1,103 @@
+#include <mpi.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+#define TAG 10
+#define N 4
+
+int main(int argc, char *argv[])
+{
+  int pid, npr, origen, destino, ndat, tag;
+  int VA[N], i,j;
+  MPI_Status info;
+  //int operador;
+  int resp;
+  int sum=0;
+  int sum2=0;
+  int mul=1;
+
+  MPI_Init(&argc, &argv);
+  MPI_Comm_rank(MPI_COMM_WORLD, &pid);
+  MPI_Comm_size(MPI_COMM_WORLD, &npr); 
+  
+  for (i=0; i<N; i++) 
+	VA[i] = 0; 
+  
+  if (pid == 0)
+  {	
+	for (i=0; i<N; i++) 
+		VA[i] = i;
+	printf("Tenemos %d procesadores\n", npr);
+    	for(i=1;i<npr;i++)
+    	{
+     	 	
+      		MPI_Send(&VA[0], N, MPI_INT, i, tag, MPI_COMM_WORLD);
+    	}
+/*
+    	for(i=1;i<npr;i++)
+    	{
+      		MPI_Recv(&resp, 1, MPI_INT, i, tag, MPI_COMM_WORLD, &info);
+      		printf(" La respuesta es... %d\n", resp);
+    	}
+*/
+  } 
+  else
+  {	MPI_Recv(&VA[0], N, MPI_INT, 0, tag, MPI_COMM_WORLD, &info);
+	if(pid==1)
+	{
+	 	
+    		for (i=1; i<N; i++)
+		{
+	   		sum=sum+VA[i];	
+		}
+		MPI_Get_count (&info, MPI_INT, &ndat);
+ 		printf("Proceso %d recibe Vector del Maestro %d: tag %d, #datos %d \n\n",pid,info.MPI_SOURCE, info.MPI_TAG, ndat);
+		printf("[");
+ 		for (i=0; i<ndat; i++) 
+		   printf("%4d", VA[i]);
+		printf("]");
+		printf("La suma  es: %d  ",sum);
+		//MPI_Send(&sum, 1, MPI_INT, 0, tag, MPI_COMM_WORLD);
+		printf("\n\n");
+	}
+	if(pid==2)
+	{
+		
+    		for (i=1; i<N; i++)
+		{
+	   		sum2=sum2+VA[i]+2;	
+		}
+		MPI_Get_count (&info, MPI_INT, &ndat);
+ 		printf("Proceso %d recibe Vector del Maestro %d: tag %d, #datos %d \n\n",pid,info.MPI_SOURCE, info.MPI_TAG, ndat);
+		printf("[");
+ 		for (i=0; i<ndat; i++) 
+		   printf("%4d", VA[i]);
+		printf("]");
+		printf("La suma de dos es : %d ",sum2);
+		//MPI_Send(&sum2, 1, MPI_INT, 0, tag, MPI_COMM_WORLD);
+		printf("\n\n");
+	}
+
+	if(pid==3)
+	{
+		
+    		for (i=1; i<N; i++)
+		{
+	   		mul=mul*VA[i];	
+		}
+		MPI_Get_count (&info, MPI_INT, &ndat);
+ 		printf("Proceso %d recibe Vector del Maestro %d: tag %d, #datos %d \n\n",pid,info.MPI_SOURCE, info.MPI_TAG, ndat);
+		printf("[");
+ 		for (i=0; i<ndat; i++) 
+		   printf("%4d", VA[i]);
+		printf("]");
+		printf("La mult  es : %d ",mul);
+		MPI_Send(&sum2, 1, MPI_INT, 0, tag, MPI_COMM_WORLD);
+		printf("\n");
+	}
+
+  } 
+  
+  MPI_Finalize(); 
+  return 0;
+}
